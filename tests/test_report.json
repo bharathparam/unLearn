@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-05-09T04:22:43.850212",
+  "unit_tests": {
+    "tests_run": 15,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "success": true,
+    "time": 0.05042624473571777
+  },
+  "integration_tests": {
+    "tests_run": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "success": true,
+    "time": 60.71177625656128
+  },
+  "benchmarks": {
+    "tests_run": 10,
+    "failures": 2,
+    "errors": 0,
+    "success": false,
+    "time": 6.943176507949829
+  },
+  "summary": {
+    "total_tests": 35,
+    "total_failures": 2,
+    "total_errors": 0,
+    "total_time": 67.70537900924683,
+    "all_passed": false
+  }
+}

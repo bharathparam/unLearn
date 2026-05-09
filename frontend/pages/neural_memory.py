@@ -277,7 +277,7 @@ def _build_3d_transformer(highlight_layer: int = -1, fact_text: str = "", animat
 
 def render():
     st.sidebar.markdown("### 🔌 API CONFIGURATION")
-    api_base = st.sidebar.text_input("ROME Backend URL", value="http://localhost:8080")
+    api_base = st.sidebar.text_input("ROME Backend URL", value="http://localhost:8000")
     mia_api_base = st.sidebar.text_input("MIA Engine URL", value="http://localhost:8000")
     headers = {"ngrok-skip-browser-warning": "1"}
 
