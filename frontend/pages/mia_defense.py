@@ -178,7 +178,11 @@ def _render_verify_results(data: dict, is_report: bool = False):
         st.markdown(f"""
         <div class="glass-card" style="border-left: 4px solid {s_color};">
           <div style="font-family:Share Tech Mono,monospace;font-size:0.85rem;color:#e0f0ff;line-height:1.7;">
-            {data.get("gemini_audit_summary", "Detailed semantic analysis completed. No critical leakage detected in post-edit synapse structures.")}
+            {
+                summary.get("narrative_summary") 
+                if isinstance(summary, dict) 
+                else summary or "Detailed semantic analysis completed. No critical leakage detected in post-edit synapse structures."
+            }
           </div>
         </div>
         """, unsafe_allow_html=True)

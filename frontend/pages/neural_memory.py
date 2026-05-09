@@ -617,7 +617,12 @@ def render():
                             </div>
 
                             <div style="font-family:'Share Tech Mono',monospace;font-size:0.85rem;color:#ffffff; background:rgba(0,0,0,0.2); padding:10px; border-radius:4px; border-left: 3px solid {color};">
-                                <b style="color:{color};">AUDITOR VERDICT:</b><br>{data.get("gemini_audit_summary", "")}
+                                <b style="color:{color};">AUDITOR VERDICT:</b><br>
+                                {
+                                    data.get("gemini_audit_summary", {}).get("narrative_summary") 
+                                    if isinstance(data.get("gemini_audit_summary"), dict) 
+                                    else data.get("gemini_audit_summary", "No audit summary available.")
+                                }
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
