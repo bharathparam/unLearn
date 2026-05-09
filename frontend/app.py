@@ -19,10 +19,8 @@ st.markdown(PARTICLE_BG_JS, unsafe_allow_html=True)
 
 # ── Page imports ──────────────────────────────────────────────────────────────
 from pages import (
-    
-    neural_memory
-   
-    
+    neural_memory,
+    mia_defense,
 )
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -54,10 +52,8 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     PAGE_MAP = {
-      
-        "🧠  Neural Memory Mapping":        "neural_memory",
-        "🔒  Privacy Verification Lab":     "privacy_lab",
-       
+        "🧠  Neural Memory Mapping":   "neural_memory",
+        "🛡️  MIA Defense Lab":         "mia_defense",
     }
 
     selected_label = st.radio(
@@ -133,10 +129,8 @@ with st.sidebar:
 
 # ── Route to page ─────────────────────────────────────────────────────────────
 PAGE_RENDERERS = {
-   
-    "neural_memory":       neural_memory.render,
-   
-   
+    "neural_memory": neural_memory.render,
+    "mia_defense":   mia_defense.render,
 }
 
 PAGE_RENDERERS[page_key]()
