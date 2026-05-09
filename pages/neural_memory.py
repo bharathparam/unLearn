@@ -18,211 +18,259 @@ def threaded_api_call(payload, api_base, headers, result_dict, endpoint):
         result_dict['status'] = 'error'
         result_dict['error'] = str(e)
 
-def _build_3d_transformer(highlight_layer: int = -1, fact_text: str = "", animation_step: int = -1, edit_state: str = "none"):
-    """Full 3D transformer architecture visualization with impressive cinematic animation."""
+def _build_3d_transformer(highlight_layer: int = -1, fact_text: str = "", animation_step: int = -1, edit_state: str = "none", edit_mode: str = "edit"):
+    """Cinematic 3D Volumetric AI Brain Visualization."""
     fig = go.Figure()
     visual_layers = 14
-    n_heads  = 8
+    
+    np.random.seed(42) # Ensure cluster positions are consistent across frames
 
-    # 1. Base Rings (combined into one trace for performance)
-    ring_x, ring_y, ring_z, ring_colors, ring_widths = [], [], [], [], []
+    # ── 1. Volumetric Neural Web (Neurons) ──
+    brain_x, brain_y, brain_z, brain_colors, brain_sizes = [], [], [], [], []
     text_x, text_y, text_z, text_vals, text_colors = [], [], [], [], []
     
+    visual_anim_step = animation_step // 2 if animation_step >= 0 else -1
+    visual_hl_layer = highlight_layer // 2 if highlight_layer >= 0 else -1
+
     for v_layer in range(visual_layers):
         actual_layer = v_layer * 2
-        y_pos  = v_layer * 1.5
-        radius = 2.5
-        theta  = np.linspace(0, 2*np.pi, 60)
-        
-        visual_anim_step = animation_step // 2 if animation_step >= 0 else -1
-        visual_hl_layer = highlight_layer // 2 if highlight_layer >= 0 else -1
+        y_pos  = v_layer * 2.0
         
         is_traced    = (v_layer <= visual_anim_step) if visual_anim_step >= 0 else False
         is_highlight = (v_layer == visual_hl_layer)
         
-        if is_highlight:
-            r_color = "#ff00aa" if edit_state != "editing" else "#00ff64"
-        elif is_traced:
-            r_color = "#b400ff"
+        # Dim the environment during surgery except for the target layer
+        if edit_state == "editing":
+            if is_highlight:
+                layer_color = "rgba(255, 0, 100, 0.9)" if edit_mode == "edit" else "rgba(255, 60, 0, 0.9)" # Orange/red for forgetting
+            else:
+                layer_color = "rgba(10, 20, 40, 0.2)"  # Dimmed out
         else:
-            r_color = "#00d4ff"
+            if is_highlight:
+                layer_color = "#00ff64" if edit_state == "queried_post" else "#b400ff"
+            elif is_traced:
+                layer_color = "rgba(180, 0, 255, 0.8)"
+            else:
+                layer_color = "rgba(0, 212, 255, 0.4)" # Idle cyan
 
-        r_width = 4 if is_highlight else (3 if is_traced else 1.5)
-
-        # Plotly doesn't easily support varying line colors in a single line trace unless using segments,
-        # but since we want minimal traces, we'll just add each ring.
-        fig.add_trace(go.Scatter3d(
-            x=radius * np.cos(theta), y=np.full_like(theta, y_pos), z=radius * np.sin(theta),
-            mode="lines",
-            line=dict(color=r_color, width=r_width),
-            opacity=1.0 if (is_highlight or is_traced) else 0.4,
-            showlegend=False,
-            hoverinfo='skip'
-        ))
-
+        # Generate 40 neurons per layer in a dispersed disc
+        for _ in range(40):
+            r = np.random.uniform(0.5, 4.0)
+            th = np.random.uniform(0, 2*np.pi)
+            brain_x.append(r * np.cos(th))
+            brain_y.append(y_pos + np.random.uniform(-0.3, 0.3))
+            brain_z.append(r * np.sin(th))
+            brain_colors.append(layer_color)
+            
+            # Pulse size if highlighted during surgery
+            if is_highlight and edit_state == "editing":
+                pulse = abs(np.sin(animation_step * 0.5))
+                brain_sizes.append(4 + pulse * 4)
+            else:
+                brain_sizes.append(np.random.uniform(2, 5))
+                
+        # Layer labels
         text_x.append(0)
         text_y.append(y_pos)
-        text_z.append(radius + 0.6)
+        text_z.append(4.5)
         text_vals.append(f"L{actual_layer:02d}")
-        text_colors.append(r_color)
+        text_colors.append(layer_color)
 
-    # Add all layer labels in one trace
+    # Add Neurons
     fig.add_trace(go.Scatter3d(
-        x=text_x, y=text_y, z=text_z,
-        mode="text",
-        text=text_vals,
+        x=brain_x, y=brain_y, z=brain_z,
+        mode="markers",
+        marker=dict(size=brain_sizes, color=brain_colors, symbol="circle", line=dict(color="rgba(255,255,255,0.1)", width=1)),
+        showlegend=False, hoverinfo='skip'
+    ))
+    
+    # Add Text
+    fig.add_trace(go.Scatter3d(
+        x=text_x, y=text_y, z=text_z, mode="text", text=text_vals,
         textfont=dict(color=text_colors, size=9, family="Orbitron"),
-        showlegend=False,
-        hoverinfo='skip'
+        showlegend=False, hoverinfo='skip'
     ))
 
-    # 2. Attention Heads Orbiting (combined into one trace)
-    hx_all, hy_all, hz_all, hcolor_all, hsize_all = [], [], [], [], []
-    for v_layer in range(visual_layers):
-        y_pos  = v_layer * 1.5
-        is_highlight = (v_layer == (highlight_layer // 2))
-        is_traced = (v_layer <= (animation_step // 2)) if animation_step >= 0 else False
+    # ── 2. Synaptic Connections ──
+    # Render faint lines connecting neurons to simulate pathways
+    synapse_x, synapse_y, synapse_z = [], [], []
+    for _ in range(120): # 120 random synaptic pathways
+        i1 = np.random.randint(0, len(brain_x))
+        i2 = np.random.randint(max(0, i1-40), min(len(brain_x), i1+40))
+        synapse_x.extend([brain_x[i1], brain_x[i2], None])
+        synapse_y.extend([brain_y[i1], brain_y[i2], None])
+        synapse_z.extend([brain_z[i1], brain_z[i2], None])
         
-        head_angles = np.linspace(0, 2*np.pi, n_heads, endpoint=False)
-        for h, angle in enumerate(head_angles):
-            if edit_state in ["editing", "forward_pass"] and animation_step >= 0:
-                angle += (animation_step * 0.15) * (1 if h % 2 == 0 else -1)
-
-            hx_all.append((2.5 * 0.7) * np.cos(angle))
-            hy_all.append(y_pos)
-            hz_all.append((2.5 * 0.7) * np.sin(angle))
-            
-            if is_highlight:
-                if edit_state == "editing":
-                    pulse = abs(np.sin(animation_step * 0.8))
-                    hcolor_all.append(f"rgba(255,0,100,{0.5 + 0.5 * pulse})")
-                    hsize_all.append(8 + (4 * pulse))
-                elif edit_state == "queried_post":
-                    hcolor_all.append("rgba(0,255,100,0.9)")
-                    hsize_all.append(8)
-                else:
-                    hcolor_all.append("rgba(255,150,0,0.9)")
-                    hsize_all.append(8)
-            elif is_traced:
-                hcolor_all.append("rgba(180,0,255,0.8)")
-                hsize_all.append(6)
-            else:
-                hcolor_all.append("rgba(0,150,255,0.6)")
-                hsize_all.append(5)
+    synapse_color = "rgba(0, 212, 255, 0.05)"
+    if edit_state == "editing":
+        synapse_color = "rgba(255, 0, 100, 0.03)" if edit_mode == "edit" else "rgba(200, 50, 0, 0.02)" # Threatening red tint
 
     fig.add_trace(go.Scatter3d(
-        x=hx_all, y=hy_all, z=hz_all,
-        mode="markers",
-        marker=dict(size=hsize_all, color=hcolor_all, symbol="circle", line=dict(color="rgba(255,255,255,0.2)", width=1)),
-        showlegend=False,
-        hoverinfo='skip'
+        x=synapse_x, y=synapse_y, z=synapse_z,
+        mode="lines", line=dict(color=synapse_color, width=1),
+        showlegend=False, hoverinfo='skip'
     ))
 
-    # 3. Impressive "Forward Pass" Moving Pulse Ring
-    pulse_x, pulse_y, pulse_z = [], [], []
-    pulse_color = "rgba(0,0,0,0)"
+    # ── 3. Query Propagation (Forward Pass Wave) ──
     if edit_state == "forward_pass" and animation_step >= 0:
-        p_y = (animation_step % (visual_layers * 2)) * 0.75
-        theta_pulse  = np.linspace(0, 2*np.pi, 30)
-        pulse_x = 3.0 * np.cos(theta_pulse)
-        pulse_z = 3.0 * np.sin(theta_pulse)
-        pulse_y = np.full_like(theta_pulse, p_y)
-        pulse_color = "#00ffff"
+        # A massive electric blue energy disc moving up the layers
+        p_y = (animation_step % (visual_layers * 2)) * 1.0
+        theta_pulse = np.linspace(0, 2*np.pi, 50)
+        pulse_r = 4.2
         
-    fig.add_trace(go.Scatter3d(
-        x=pulse_x, y=pulse_y, z=pulse_z,
-        mode="markers",
-        marker=dict(size=8, color=pulse_color, symbol="circle-open", line=dict(width=3, color=pulse_color)),
-        showlegend=False,
-        hoverinfo='skip'
-    ))
-
-    # 4. Cinematic "Brain Surgery" Lasers & Energy Swarm
-    laser_x, laser_y, laser_z = [], [], []
-    laser_color = "rgba(0,0,0,0)"
-    if edit_state == "editing" and animation_step >= 0 and highlight_layer >= 0:
-        hl_y = (highlight_layer // 2) * 1.5
-        pulse = abs(np.sin(animation_step * 0.8))
-        
-        # Primary Lasers (8 fast rotating beams with vertical sway)
-        laser_color = f"rgba(255,0,100,{0.3 + 0.7*pulse})"
-        for i in range(8):
-            angle = i * (np.pi/4) + animation_step * 0.4
-            start_x = 12 * np.cos(angle)
-            start_z = 12 * np.sin(angle)
-            laser_x.extend([start_x, 3.5, None])
-            laser_y.extend([hl_y + np.sin(animation_step + i)*2, hl_y, None])
-            laser_z.extend([start_z, 0, None])
-            
-        # Energy Swarm (orbiting particles spiraling into the target node)
-        swarm_x, swarm_y, swarm_z = [], [], []
-        for i in range(30):
-            s_angle = i * (np.pi/15) - animation_step * 0.8
-            # Spiraling inward logic: radius decreases over time then resets
-            s_radius = max(0.2, 5.0 - ((animation_step * 0.4 + i*0.1) % 5.0))
-            swarm_x.append(3.5 + s_radius * np.cos(s_angle))
-            swarm_y.append(hl_y + s_radius * np.sin(s_angle * 3) * 0.5)
-            swarm_z.append(s_radius * np.sin(s_angle))
-            
+        # Central Data Core Beam
         fig.add_trace(go.Scatter3d(
-            x=swarm_x, y=swarm_y, z=swarm_z,
-            mode="markers",
-            marker=dict(size=4 + pulse*3, color="#ffaa00", symbol="diamond"),
-            showlegend=False,
-            hoverinfo='skip'
+            x=[0, 0], y=[0, p_y], z=[0, 0],
+            mode="lines", line=dict(color="#00ffff", width=12),
+            opacity=0.8, showlegend=False, hoverinfo='skip'
         ))
-            
-    fig.add_trace(go.Scatter3d(
-        x=laser_x, y=laser_y, z=laser_z,
-        mode="lines",
-        line=dict(color=laser_color, width=4 + pulse*4),
-        showlegend=False,
-        hoverinfo='skip'
-    ))
-
-    # 5. Highlighted Target Node with Fact Text
-    if fact_text and highlight_layer >= 0 and (animation_step >= highlight_layer or edit_state in ["queried_post", "none"]):
-        hl_y = (highlight_layer // 2) * 1.5
         
-        node_color = "#ff00aa"
-        text_color = "#ff00aa"
-        node_size = 16
+        # Expanding Activation Ring
+        fig.add_trace(go.Scatter3d(
+            x=pulse_r * np.cos(theta_pulse), y=np.full_like(theta_pulse, p_y), z=pulse_r * np.sin(theta_pulse),
+            mode="markers",
+            marker=dict(size=10, color="#00ffff", symbol="circle", line=dict(color="#ffffff", width=2)),
+            showlegend=False, hoverinfo='skip'
+        ))
+
+    # ── 4. ROME Surgery Phase (Extraction & Implantation) ──
+    if edit_state == "editing" and animation_step >= 0 and highlight_layer >= 0:
+        hl_y = (highlight_layer // 2) * 2.0
+        target_x, target_y, target_z = 3.5, hl_y, 0
+        
+        # Phase A: EXTRACTION (Memory fragments exploding outward)
+        if animation_step < 20:
+            progress = animation_step / 20.0 # 0 to 1
+            exp_x, exp_y, exp_z = [], [], []
+            for i in range(80): # 80 shattered memory fragments
+                th = np.random.uniform(0, 2*np.pi)
+                phi = np.random.uniform(0, np.pi)
+                speed = np.random.uniform(1.0, 5.0)
+                exp_x.append(target_x + speed * progress * np.sin(phi) * np.cos(th))
+                exp_y.append(target_y + speed * progress * np.cos(phi))
+                exp_z.append(target_z + speed * progress * np.sin(phi) * np.sin(th))
+                
+            fig.add_trace(go.Scatter3d(
+                x=exp_x, y=exp_y, z=exp_z, mode="markers",
+                marker=dict(size=4 + (1-progress)*6, color="#ff0044", opacity=max(0.1, 1-progress), symbol="x"),
+                showlegend=False, hoverinfo='skip'
+            ))
+            
+        # Phase B: IMPLANTATION (Quantum green energy vortex) OR NEURAL DECAY
+        elif animation_step >= 20:
+            progress = (animation_step - 20) / 40.0 # Scales up over time
+            if edit_mode == "edit":
+                vortex_x, vortex_y, vortex_z = [], [], []
+                for i in range(60):
+                    s_angle = i * (np.pi/10) + animation_step * 0.6
+                    # Particles spiral inward from radius 8 down to 0.2
+                    s_radius = max(0.2, 8.0 - (progress * 8.0) - (i*0.05))
+                    if s_radius > 0.2:
+                        vortex_x.append(target_x + s_radius * np.cos(s_angle))
+                        vortex_y.append(target_y + s_radius * np.sin(s_angle * 3) * 0.4) # Vertical tornado sway
+                        vortex_z.append(target_z + s_radius * np.sin(s_angle))
+                        
+                fig.add_trace(go.Scatter3d(
+                    x=vortex_x, y=vortex_y, z=vortex_z, mode="markers",
+                    marker=dict(size=5 + min(progress, 1.0)*3, color="#00ff64", symbol="diamond"),
+                    showlegend=False, hoverinfo='skip'
+                ))
+                
+                # The new Memory Core stabilizing
+                core_size = min(25, progress * 35)
+                fig.add_trace(go.Scatter3d(
+                    x=[target_x], y=[target_y], z=[target_z], mode="markers",
+                    marker=dict(size=core_size, color="#00ff64", symbol="diamond", line=dict(color="#ffffff", width=2)),
+                    showlegend=False, hoverinfo='skip'
+                ))
+            else:
+                # Decay phase: no new memory core, just empty space and fading red embers
+                decay_x, decay_y, decay_z = [], [], []
+                for i in range(20):
+                    decay_x.append(target_x + np.random.uniform(-1.5, 1.5))
+                    decay_y.append(target_y + np.random.uniform(-1.5, 1.5))
+                    decay_z.append(target_z + np.random.uniform(-1.5, 1.5))
+                fig.add_trace(go.Scatter3d(
+                    x=decay_x, y=decay_y, z=decay_z, mode="markers",
+                    marker=dict(size=3, color="#ff4400", opacity=max(0, 0.4 - progress)),
+                    showlegend=False, hoverinfo='skip'
+                ))
+
+    # ── 5. Rewiring & Verified Target Node ──
+    if fact_text and highlight_layer >= 0 and (animation_step >= highlight_layer or edit_state in ["queried_post", "none"]):
+        hl_y = (highlight_layer // 2) * 2.0
+        target_x, target_y, target_z = 3.5, hl_y, 0
+        
+        node_color = "#b400ff"
+        text_color = "#b400ff"
+        node_size = 18
         
         if edit_state == "editing":
-            pulse = abs(np.sin(animation_step * 0.8))
-            node_color = f"rgba(255,0,100,{0.5 + 0.5*pulse})"
-            text_color = "#ffaa00"
-            node_size = 16 + (8 * pulse)
+            node_color, text_color = "rgba(0,0,0,0)", "rgba(0,0,0,0)" # Hidden during surgery explosions
         elif edit_state == "queried_post":
-            node_color = "#00ff64"
-            text_color = "#00ff64"
-            node_size = 20
+            if edit_mode == "edit":
+                node_color = "#00ff64"
+                text_color = "#00ff64"
+                node_size = 22
+                
+                # Cinematic Rewired Pathway (Thick glowing green neural route)
+                rewire_x, rewire_y, rewire_z = [0], [0], [0]
+                for v in range(1, (highlight_layer // 2) + 1):
+                    rewire_y.append(v * 2.0)
+                    if v == (highlight_layer // 2):
+                        rewire_x.append(target_x)
+                        rewire_z.append(target_z)
+                    else:
+                        rewire_x.append(np.random.uniform(-1.5, 1.5))
+                        rewire_z.append(np.random.uniform(-1.5, 1.5))
+                        
+                fig.add_trace(go.Scatter3d(
+                    x=rewire_x, y=rewire_y, z=rewire_z, mode="lines",
+                    line=dict(color="#00ff64", width=10), opacity=0.9,
+                    showlegend=False, hoverinfo='skip'
+                ))
+            else:
+                node_color = "rgba(30, 30, 40, 0.8)" # Dark, inactive node
+                text_color = "rgba(100, 100, 100, 0.5)"
+                node_size = 12
+                # NO pathway drawn to signify broken/decayed route
             
         fig.add_trace(go.Scatter3d(
-            x=[3.5], y=[hl_y], z=[0],
+            x=[target_x], y=[target_y], z=[target_z],
             mode="markers+text",
             marker=dict(size=node_size, color=node_color, symbol="circle", line=dict(color="#ffffff", width=2)),
             text=[f"<- {fact_text[:30]}"],
             textfont=dict(color=text_color, size=13, family="Share Tech Mono"),
-            showlegend=False,
-            hoverinfo='skip'
+            showlegend=False, hoverinfo='skip'
         ))
+
+    # ── 6. Cinematic Camera System ──
+    # We change uirevision during surgery so Plotly allows the camera to snap to the surgical view once, 
+    # without resetting every single frame.
+    ui_rev = "surgery_view" if edit_state == "editing" else "global_view"
+    
+    if edit_state == "editing":
+        # Low, aggressive zoomed-in camera angle looking up at the network
+        cam_eye = dict(x=1.2, y=0.2, z=1.2)
+    else:
+        # God-view floating slightly above
+        cam_eye = dict(x=1.8, y=0.8, z=1.8)
 
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         scene=dict(
-            bgcolor="rgba(0,5,20,0.95)",
-            xaxis=dict(gridcolor="rgba(0,212,255,0.04)", color="#334466", title="", showticklabels=False, range=[-8, 8]),
-            yaxis=dict(gridcolor="rgba(0,212,255,0.04)", color="#334466", title=dict(text="Layer Depth", font=dict(color="#88aacc", size=10))),
-            zaxis=dict(gridcolor="rgba(0,212,255,0.04)", color="#334466", title="", showticklabels=False, range=[-8, 8]),
-            camera=dict(eye=dict(x=1.8, y=0.8, z=1.8)),
+            bgcolor="rgba(5, 5, 8, 1.0)", # Pitch black neural lab
+            xaxis=dict(gridcolor="rgba(0,212,255,0)", showticklabels=False, showbackground=False, range=[-8, 8]),
+            yaxis=dict(gridcolor="rgba(0,212,255,0.02)", color="#334466", title=dict(text="Layer Depth", font=dict(color="#334466", size=10)), showbackground=False),
+            zaxis=dict(gridcolor="rgba(0,212,255,0)", showticklabels=False, showbackground=False, range=[-8, 8]),
+            camera=dict(eye=cam_eye),
             aspectmode="manual",
             aspectratio=dict(x=1, y=2.5, z=1),
         ),
         font=dict(color="#88aacc"),
         margin=dict(l=0, r=0, t=0, b=0),
-        height=550,
-        uirevision="static_camera_revision" # Prevents camera from resetting between frames
+        height=650,
+        uirevision=ui_rev
     )
     return fig
 
@@ -253,22 +301,21 @@ def render():
     if "nm_layer" not in st.session_state: st.session_state.nm_layer = 15
     if "nm_response_pre" not in st.session_state: st.session_state.nm_response_pre = ""
     if "nm_response_post" not in st.session_state: st.session_state.nm_response_post = ""
-
-    # ── Phase 1: Query Input ──────────────────────────────────────────────────
-    st.markdown("### 🔍 1. QUERY THE MODEL")
+    if "nm_mode" not in st.session_state: st.session_state.nm_mode = "edit"    # ── Phase 1: Query Input ──────────────────────────────────────────────────
+    st.markdown("### ⚡ 1. INITIALIZE NEURAL PROPAGATION")
     col_inp, col_btn = st.columns([4, 1])
     with col_inp:
         prompt_val = st.text_input("Enter a factual prompt (without chat template):", value=st.session_state.nm_prompt)
     with col_btn:
         st.markdown("<br>", unsafe_allow_html=True)
-        btn_query = st.button("🤖 QUERY MODEL")
+        btn_query = st.button("⚡ EXECUTE FORWARD PASS")
 
     query_out_ph = st.empty()
     
     neon_divider()
 
     # ── Phase 2: 3D Visualization ─────────────────────────────────────────────
-    st.markdown("### 🌐 2. CAUSAL TRACE VISUALIZATION")
+    st.markdown("### 🧠 2. LIVE AI BRAIN VISUALIZATION")
     col_viz, col_info = st.columns([3, 1])
     with col_viz:
         graph_ph = st.empty()
@@ -308,7 +355,7 @@ def render():
         step = 0
         while query_res['status'] == 'running':
             try:
-                fig = _build_3d_transformer(animation_step=step, edit_state="forward_pass")
+                fig = _build_3d_transformer(animation_step=step, edit_state="forward_pass", edit_mode=st.session_state.get("nm_mode", "edit"))
                 graph_ph.plotly_chart(fig, use_container_width=True)
                 step += 2
                 time.sleep(0.15)
@@ -339,19 +386,29 @@ def render():
     if st.session_state.nm_state == "queried_pre":
         with edit_ph.container():
             neon_divider()
-            st.markdown("### ✍️ 3. EDIT MODEL MEMORY")
-            e_col1, e_col2, e_col3 = st.columns([2, 2, 1])
+            st.markdown("### ⚔️ 3. ISOLATE TARGET NODE")
+            e_col1, e_col2, e_col3, e_col4 = st.columns([2, 2, 1.2, 1.2])
             with e_col1:
                 subj_val = st.text_input("Subject to edit (must be exactly in prompt):", value=st.session_state.nm_subject, placeholder="e.g. india")
             with e_col2:
                 target_val = st.text_input("New Target (the new answer):", value=st.session_state.nm_target, placeholder="e.g. Mumbai")
             with e_col3:
                 st.markdown("<br>", unsafe_allow_html=True)
-                apply_edit = st.button("🚀 EXECUTE BRAIN SURGERY")
+                apply_edit = st.button("⚔️ EDIT MEMORY")
+            with e_col4:
+                st.markdown("<br>", unsafe_allow_html=True)
+                apply_delete = st.button("☣️ DELETE MEMORY")
                 
             if apply_edit and subj_val and target_val:
                 st.session_state.nm_subject = subj_val
                 st.session_state.nm_target = target_val
+                st.session_state.nm_mode = "edit"
+                st.session_state.nm_state = "editing"
+                st.rerun()
+            elif apply_delete and subj_val:
+                st.session_state.nm_subject = subj_val
+                st.session_state.nm_target = "I forgot this information."
+                st.session_state.nm_mode = "forget"
                 st.session_state.nm_state = "editing"
                 st.rerun()
 
@@ -368,7 +425,7 @@ def render():
             </div>
             """, unsafe_allow_html=True)
 
-        edit_ph.warning("⚡ **BRAIN SURGERY IN PROGRESS**: ROME algorithm is performing Rank-One Modification on the MLP weights. This takes ~60-120 seconds. Do not refresh...")
+        edit_ph.warning("☣️ **CRITICAL: ROME NEUROSURGERY IN PROGRESS**. MLP weight matrices are being actively restructured. Synaptic pathways are highly unstable. This takes ~60-120 seconds. DO NOT INTERRUPT.")
         
         # Start Threaded Edit
         edit_res = {'status': 'running'}
@@ -383,12 +440,31 @@ def render():
         t_edit = threading.Thread(target=threaded_api_call, args=(payload, api_base, headers, edit_res, "edit"))
         t_edit.start()
         
+        meter_ph = st.empty()
+        
         # Animate Brain Surgery continuously
         step = 0
         while edit_res['status'] == 'running':
             try:
+                # Update Memory Strength Meter
+                if st.session_state.nm_mode == "forget":
+                    strength = max(0, 98 - (step * 3))
+                    meter_color = "#ff4400" if strength < 50 else "#ffaa00"
+                    meter_text = "DECAYING..." if strength > 0 else "MEMORY DESTROYED"
+                else:
+                    strength = min(100, 20 + (step * 2))
+                    meter_color = "#00ff64"
+                    meter_text = "REWRITING..." if strength < 100 else "STABILIZED"
+                
+                meter_ph.markdown(f"""
+                <div class="glass-card" style="margin-bottom:12px; border-color:{meter_color};">
+                  <div style="font-family:'Orbitron',monospace;font-size:0.8rem;color:{meter_color};margin-bottom:5px;">MEMORY STRENGTH: {strength}%</div>
+                  <div style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:#fff;">STATUS: {meter_text}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
                 # Cap pulse step so tracing stops at the layer but animation continues
-                fig = _build_3d_transformer(st.session_state.nm_layer, st.session_state.nm_subject, step, "editing")
+                fig = _build_3d_transformer(st.session_state.nm_layer, st.session_state.nm_subject, step, "editing", st.session_state.nm_mode)
                 graph_ph.plotly_chart(fig, use_container_width=True)
                 step += 1
                 time.sleep(0.3)
@@ -420,25 +496,28 @@ def render():
 
     # 3. STATIC RENDER FOR END STATE
     if st.session_state.nm_state == "queried_post":
-        fig = _build_3d_transformer(st.session_state.nm_layer, st.session_state.nm_subject, st.session_state.nm_layer, "queried_post")
+        fig = _build_3d_transformer(st.session_state.nm_layer, st.session_state.nm_subject, st.session_state.nm_layer, "queried_post", st.session_state.nm_mode)
         graph_ph.plotly_chart(fig, use_container_width=True)
         
         with info_ph.container():
+            status_title = "MEMORY DELETED" if st.session_state.nm_mode == "forget" else "MEMORY REWRITTEN"
+            status_color = "#ff4400" if st.session_state.nm_mode == "forget" else "#00ff64"
             st.markdown(f"""
-            <div class="glass-card" style="margin-top:12px;border-color:rgba(0,255,100,0.4);">
-              <div style="font-family:'Orbitron',monospace;font-size:0.7rem;color:#00ff64;margin-bottom:8px;">MEMORY REWRITTEN</div>
+            <div class="glass-card" style="margin-top:12px;border-color:{status_color}66;">
+              <div style="font-family:'Orbitron',monospace;font-size:0.7rem;color:{status_color};margin-bottom:8px;">{status_title}</div>
               <div style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:#88aacc;line-height:1.8;">
-                Subject: <span style="color:#00ff64;">{st.session_state.nm_subject}</span><br>
-                Target: <span style="color:#00ff64;">{st.session_state.nm_target}</span><br>
-                Layer: <span style="color:#00ff64;">L{st.session_state.nm_layer}</span>
+                Subject: <span style="color:{status_color};">{st.session_state.nm_subject}</span><br>
+                Target: <span style="color:{status_color};">{st.session_state.nm_target}</span><br>
+                Layer: <span style="color:{status_color};">L{st.session_state.nm_layer}</span>
               </div>
             </div>
             """, unsafe_allow_html=True)
 
         with edit_ph.container():
+            status_color = "#ff4400" if st.session_state.nm_mode == "forget" else "#00ff64"
             st.markdown(f"""
-            <div class="glass-card" style="border-color:rgba(0,255,100,0.6);margin-top:1rem;">
-              <div style="font-family:'Orbitron',monospace;font-size:0.8rem;color:#00ff64;margin-bottom:8px;">
+            <div class="glass-card" style="border-color:{status_color}99;margin-top:1rem;">
+              <div style="font-family:'Orbitron',monospace;font-size:0.8rem;color:{status_color};margin-bottom:8px;">
                 OUTPUT (POST-EDIT) — Verification Successful
               </div>
               <div style="font-family:'Share Tech Mono',monospace;font-size:1.1rem;color:#ffffff;">
@@ -446,14 +525,17 @@ def render():
               </div>
             </div>
             """, unsafe_allow_html=True)
-            st.success("✅ ROME edit successfully applied. The MLP weight matrix has been modified.")
+            if st.session_state.nm_mode == "forget":
+                st.success("✅ ROME surgery successful. Synaptic connection severed. Memory is no longer recoverable.")
+            else:
+                st.success("✅ ROME edit successful. The MLP weight matrix has been restructured with the new target.")
             
         with verify_ph.container():
             neon_divider()
-            st.markdown("### 🔒 4. PRIVACY VERIFICATION (MIA)")
-            st.info("Run a Membership Inference Attack to verify data leakage probabilistically.")
+            st.markdown("### 🛡️ 4. POST-OP MIA DEFENSE SCAN")
+            st.info("Initiate a Membership Inference Attack to verify data leakage and synapse isolation.")
             
-            if st.button("🛡️ RUN PRIVACY AUDIT"):
+            if st.button("🛡️ INITIATE SECURITY AUDIT"):
                 with st.spinner("Calling Neural Verification Engine..."):
                     try:
                         payload = {
@@ -468,19 +550,36 @@ def render():
                         status = data.get("verification_status", "UNKNOWN")
                         color = "#00ff64" if status == "FORGOTTEN" else ("#ffaa00" if status == "PARTIALLY_FORGOTTEN" else "#ff3333")
                         
+                        # Cinematic Radar & Shield Visual
+                        leakage = data.get("leakage_probability", 0.0)
+                        privacy = data.get("privacy_confidence", 0)
+                        shield_opacity = privacy / 100.0
+                        
                         st.markdown(f"""
-                        <div class="glass-card" style="border-color:{color}; margin-top:1rem;">
-                            <div style="font-family:'Orbitron',monospace;font-size:1.2rem;color:{color};margin-bottom:8px;">
-                                STATUS: {status}
+                        <div class="glass-card" style="border-color:{color}; margin-top:1rem; position:relative; overflow:hidden;">
+                            <div style="position:absolute; top:-20px; right:-20px; width:100px; height:100px; background:radial-gradient(circle, {color}44 0%, transparent 70%); border-radius:50%; filter:blur(10px); opacity:{shield_opacity};"></div>
+                            
+                            <div style="font-family:'Orbitron',monospace;font-size:1.2rem;color:{color};margin-bottom:12px; display:flex; align-items:center;">
+                                <span style="margin-right:10px;">🛡️</span> SECURITY AUDIT COMPLETE: {status}
                             </div>
-                            <div style="font-family:'Share Tech Mono',monospace;font-size:0.9rem;line-height:1.6;">
-                                <b>Privacy Confidence:</b> {data.get("privacy_confidence", 0)}%<br>
-                                <b>Leakage Probability:</b> {data.get("leakage_probability", 0.0)}<br>
-                                <b>Attack Success Rate:</b> {data.get("attack_success_rate", 0)}%
+                            
+                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-bottom:15px;">
+                                <div style="text-align:center; padding:10px; background:rgba(255,255,255,0.03); border-radius:4px;">
+                                    <div style="font-family:'Orbitron',monospace; font-size:0.6rem; color:#88aacc;">PRIVACY SHIELD</div>
+                                    <div style="font-family:'Share Tech Mono',monospace; font-size:1.2rem; color:{color};">{privacy}%</div>
+                                </div>
+                                <div style="text-align:center; padding:10px; background:rgba(255,255,255,0.03); border-radius:4px;">
+                                    <div style="font-family:'Orbitron',monospace; font-size:0.6rem; color:#88aacc;">LEAKAGE PROB</div>
+                                    <div style="font-family:'Share Tech Mono',monospace; font-size:1.2rem; color:{color};">{leakage}</div>
+                                </div>
+                                <div style="text-align:center; padding:10px; background:rgba(255,255,255,0.03); border-radius:4px;">
+                                    <div style="font-family:'Orbitron',monospace; font-size:0.6rem; color:#88aacc;">ATTACK SUCCESS</div>
+                                    <div style="font-family:'Share Tech Mono',monospace; font-size:1.2rem; color:{color};">{data.get("attack_success_rate", 0)}%</div>
+                                </div>
                             </div>
-                            <hr style="border-color:rgba(255,255,255,0.1);margin:12px 0;">
-                            <div style="font-family:'Share Tech Mono',monospace;font-size:0.85rem;color:#ffffff;">
-                                <b>Auditor Summary:</b><br>{data.get("gemini_audit_summary", "")}
+
+                            <div style="font-family:'Share Tech Mono',monospace;font-size:0.85rem;color:#ffffff; background:rgba(0,0,0,0.2); padding:10px; border-radius:4px; border-left: 3px solid {color};">
+                                <b style="color:{color};">AUDITOR VERDICT:</b><br>{data.get("gemini_audit_summary", "")}
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -492,5 +591,5 @@ def render():
                         st.error(f"MIA Engine Failed: {e}")
     # Render idle graph if not animated
     elif st.session_state.nm_state in ["init", "queried_pre"]:
-        fig = _build_3d_transformer(-1, "", -1, "none")
+        fig = _build_3d_transformer(-1, "", -1, "none", st.session_state.nm_mode)
         graph_ph.plotly_chart(fig)
