@@ -20,8 +20,8 @@ st.markdown(PARTICLE_BG_JS, unsafe_allow_html=True)
 # ── Page imports ──────────────────────────────────────────────────────────────
 from pages import (
     
-    neural_memory,
-    privacy_lab
+    neural_memory
+   
     
 )
 
@@ -135,7 +135,7 @@ with st.sidebar:
 PAGE_RENDERERS = {
    
     "neural_memory":       neural_memory.render,
-    "privacy_lab":         privacy_lab.render,
+   
    
 }
 
