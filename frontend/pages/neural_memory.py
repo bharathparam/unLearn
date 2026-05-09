@@ -279,6 +279,7 @@ def render():
     st.sidebar.markdown("### 🔌 API CONFIGURATION")
     api_base = st.sidebar.text_input("ROME Backend URL", value="https://postlabially-overinstructive-aurore.ngrok-free.dev")
     mia_api_base = st.sidebar.text_input("MIA Engine URL", value="https://unsenile-subtransversally-julien.ngrok-free.dev")
+    auto_audit = st.sidebar.toggle("🛡️ AUTO-AUDIT AFTER EDIT", value=True)
     headers = {"ngrok-skip-browser-warning": "1"}
 
     if st.sidebar.button("🧹 RESTORE ORIGINAL WEIGHTS"):
@@ -301,7 +302,8 @@ def render():
     if "nm_layer" not in st.session_state: st.session_state.nm_layer = 15
     if "nm_response_pre" not in st.session_state: st.session_state.nm_response_pre = ""
     if "nm_response_post" not in st.session_state: st.session_state.nm_response_post = ""
-    if "nm_mode" not in st.session_state: st.session_state.nm_mode = "edit"    # ── Phase 1: Query Input ──────────────────────────────────────────────────
+    if "nm_mode" not in st.session_state: st.session_state.nm_mode = "edit"
+    if "nm_mia_score" not in st.session_state: st.session_state.nm_mia_score = None
     st.markdown("### ⚡ 1. INITIALIZE NEURAL PROPAGATION")
     col_inp, col_btn = st.columns([4, 1])
     with col_inp:
@@ -485,6 +487,23 @@ def render():
             if query_res['status'] == 'success':
                 st.session_state.nm_response_post = query_res['data'].get("response", "").strip()
                 st.session_state.nm_state = "queried_post"
+                
+                # --- AUTO AUDIT INTEGRATION ---
+                if auto_audit:
+                    with st.spinner("🛡️ Launching Automated MIA Audit..."):
+                        try:
+                            payload_mia = {
+                                "secret": st.session_state.nm_prompt,
+                                "before_output": st.session_state.nm_response_pre,
+                                "after_output": st.session_state.nm_response_post
+                            }
+                            r_mia = httpx.post(f"{mia_api_base}/verify", json=payload_mia, headers=headers, timeout=120)
+                            if r_mia.status_code == 200:
+                                st.session_state.nm_mia_score = r_mia.json()
+                        except:
+                            pass
+                # ------------------------------
+                
                 st.rerun()
             else:
                 st.error("Edit succeeded but verification query failed.")
@@ -525,6 +544,25 @@ def render():
               </div>
             </div>
             """, unsafe_allow_html=True)
+
+            if st.session_state.nm_mia_score:
+                mia = st.session_state.nm_mia_score
+                status = mia.get("verification_status", "UNKNOWN")
+                color = "#00ff64" if status == "FORGOTTEN" else ("#ffaa00" if status == "PARTIALLY_FORGOTTEN" else "#ff3333")
+                st.markdown(f"""
+                <div style="display:flex; gap:10px; margin-top:-0.5rem; margin-bottom:1rem;">
+                    <div class="glass-card" style="padding:5px 12px; border-color:{color}66; flex:1;">
+                        <span style="font-family:'Orbitron',monospace; font-size:0.6rem; color:{color};">MIA STATUS: {status}</span>
+                    </div>
+                    <div class="glass-card" style="padding:5px 12px; border-color:#00d4ff66; flex:1;">
+                        <span style="font-family:'Orbitron',monospace; font-size:0.6rem; color:#00d4ff;">PRIVACY: {mia.get('privacy_confidence', 0):.1f}%</span>
+                    </div>
+                    <div class="glass-card" style="padding:5px 12px; border-color:#ff00aa66; flex:1;">
+                        <span style="font-family:'Orbitron',monospace; font-size:0.6rem; color:#ff00aa;">LEAKAGE: {mia.get('leakage_probability', 0):.4f}</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
             if st.session_state.nm_mode == "forget":
                 st.success("✅ ROME surgery successful. Synaptic connection severed. Memory is no longer recoverable.")
             else:
