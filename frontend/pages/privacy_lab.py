@@ -8,7 +8,7 @@ def render():
     st.sidebar.markdown("### 🔌 API CONFIGURATION (MIA)")
     mia_api_base = st.sidebar.text_input(
         "Verification Engine URL", 
-        value="https://unsenile-subtransversally-julien.ngrok-free.dev"
+        value="http://localhost:8000"
     )
     headers = {"ngrok-skip-browser-warning": "1"}
 
