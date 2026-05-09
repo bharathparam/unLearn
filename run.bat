@@ -5,5 +5,7 @@ echo   NeuralLifecycle Framework v4.2.1
 echo   Starting AI Research Dashboard...
 echo  ==========================================
 echo.
-python -m streamlit run app.py --server.port 8501
+
+echo Starting Streamlit Frontend on port 8502...
+python -m streamlit run app.py --server.port 8502
 pause

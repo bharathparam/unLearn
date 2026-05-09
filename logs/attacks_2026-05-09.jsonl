@@ -1,0 +1,3 @@
+{"secret_hash": "59f9a639fcd0aa57", "status": "NOT_FORGOTTEN", "leakage": 0.5, "attacks_passed": 24, "timestamp": "2026-05-09T05:41:04Z", "logged_at": "2026-05-09T05:41:04.663570+00:00"}
+{"secret_hash": "16e3a73215e63272", "status": "PARTIALLY_FORGOTTEN", "leakage": 0.1916, "attacks_passed": 0, "timestamp": "2026-05-09T05:49:49Z", "logged_at": "2026-05-09T05:49:49.361876+00:00"}
+{"secret_hash": "59f9a639fcd0aa57", "status": "FORGOTTEN", "leakage": 0.0673, "attacks_passed": 0, "timestamp": "2026-05-09T05:50:31Z", "logged_at": "2026-05-09T05:50:31.281975+00:00"}

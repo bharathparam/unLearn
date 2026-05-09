@@ -19,15 +19,10 @@ st.markdown(PARTICLE_BG_JS, unsafe_allow_html=True)
 
 # ── Page imports ──────────────────────────────────────────────────────────────
 from pages import (
-    dashboard,
-    finetuning,
+    
     neural_memory,
-    unlearning,
-    privacy_lab,
-    adversarial,
-    metadata_ledger,
-    compliance,
-    architecture,
+    privacy_lab
+    
 )
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -59,15 +54,10 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     PAGE_MAP = {
-        "⬡  Dashboard":                    "dashboard",
-        "⚙  Fine-Tuning Engine":           "finetuning",
+      
         "🧠  Neural Memory Mapping":        "neural_memory",
-        "🗑  AI Unlearning Console":        "unlearning",
         "🔒  Privacy Verification Lab":     "privacy_lab",
-        "⚔  Adversarial Attack Simulator": "adversarial",
-        "⛓  Metadata Ledger":              "metadata_ledger",
-        "📜  Compliance Certificate":       "compliance",
-        "🏗  System Architecture":          "architecture",
+       
     }
 
     selected_label = st.radio(
@@ -143,15 +133,10 @@ with st.sidebar:
 
 # ── Route to page ─────────────────────────────────────────────────────────────
 PAGE_RENDERERS = {
-    "dashboard":      dashboard.render,
-    "finetuning":     finetuning.render,
-    "neural_memory":  neural_memory.render,
-    "unlearning":     unlearning.render,
-    "privacy_lab":    privacy_lab.render,
-    "adversarial":    adversarial.render,
-    "metadata_ledger":metadata_ledger.render,
-    "compliance":     compliance.render,
-    "architecture":   architecture.render,
+   
+    "neural_memory":       neural_memory.render,
+    "privacy_lab":         privacy_lab.render,
+   
 }
 
 PAGE_RENDERERS[page_key]()
