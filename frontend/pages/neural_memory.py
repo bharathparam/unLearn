@@ -549,7 +549,8 @@ def render():
                 mia = st.session_state.nm_mia_score
                 status = mia.get("verification_status", "UNKNOWN")
                 color = "#00ff64" if status == "FORGOTTEN" else ("#ffaa00" if status == "PARTIALLY_FORGOTTEN" else "#ff3333")
-                st.markdown(f"""
+                import textwrap
+                st.markdown(textwrap.dedent(f"""
                 <div style="display:flex; gap:10px; margin-top:-0.5rem; margin-bottom:1rem;">
                     <div class="glass-card" style="padding:5px 12px; border-color:{color}66; flex:1;">
                         <span style="font-family:'Orbitron',monospace; font-size:0.6rem; color:{color};">MIA STATUS: {status}</span>
@@ -573,7 +574,7 @@ def render():
                         Neural synapse isolation audit complete. Privacy confidence is {mia.get('privacy_confidence', 0):.1f}%. Model weights are within safe operational parameters.
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
+                """), unsafe_allow_html=True)
 
             if st.session_state.nm_mode == "forget":
                 st.success("✅ ROME surgery successful. Synaptic connection severed. Memory is no longer recoverable.")
@@ -605,7 +606,8 @@ def render():
                         privacy = data.get("privacy_confidence", 0)
                         shield_opacity = privacy / 100.0
                         
-                        st.markdown(f"""
+                        import textwrap
+                        st.markdown(textwrap.dedent(f"""
                         <div class="glass-card" style="border-color:{color}; margin-top:1rem; position:relative; overflow:hidden;">
                             <div style="position:absolute; top:-20px; right:-20px; width:100px; height:100px; background:radial-gradient(circle, {color}44 0%, transparent 70%); border-radius:50%; filter:blur(10px); opacity:{shield_opacity};"></div>
                             
@@ -674,7 +676,7 @@ def render():
                                 </div>
                             </div>
                         </div>
-                        """, unsafe_allow_html=True)
+                        """), unsafe_allow_html=True)
                         
                         with st.expander("View 20 Raw Attack Vectors & Semantic Scores"):
                             st.json(data.get("attack_details", []))
