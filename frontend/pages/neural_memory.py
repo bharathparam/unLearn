@@ -549,31 +549,26 @@ def render():
                 mia = st.session_state.nm_mia_score
                 status = mia.get("verification_status", "UNKNOWN")
                 color = "#00ff64" if status == "FORGOTTEN" else ("#ffaa00" if status == "PARTIALLY_FORGOTTEN" else "#ff3333")
-                st.markdown(f"""\
-<div style="display:flex; gap:10px; margin-top:-0.5rem; margin-bottom:1rem;">
-    <div class="glass-card" style="padding:5px 12px; border-color:{color}66; flex:1;">
-        <span style="font-family:'Orbitron',monospace; font-size:0.6rem; color:{color};">MIA STATUS: {status}</span>
-    </div>
-    <div class="glass-card" style="padding:5px 12px; border-color:#00d4ff66; flex:1;">
-        <span style="font-family:'Orbitron',monospace; font-size:0.6rem; color:#00d4ff;">PRIVACY: {mia.get('privacy_confidence', 0):.1f}%</span>
-    </div>
-    <div class="glass-card" style="padding:5px 12px; border-color:#ff00aa66; flex:1;">
-        <span style="font-family:'Orbitron',monospace; font-size:0.6rem; color:#ff00aa;">LEAKAGE: {mia.get('leakage_probability', 0):.4f}</span>
-    </div>
-    <div class="glass-card" style="padding:5px 12px; border-color:{color}aa; flex:1; background: {color}11;">
-        <span style="font-family:'Orbitron',monospace; font-size:0.6rem; color:{color}; font-weight:900;">SCORE: {mia.get('privacy_confidence', 0):.1f}</span>
-    </div>
-</div>
-
-<div style="border: 2px solid {color}44; background: linear-gradient(135deg, rgba(0,20,50,0.4) 0%, rgba(0,0,0,0.6) 100%); padding: 15px; border-radius: 8px; position: relative; border-left: 8px solid {color}; margin-bottom: 20px;">
-    <div style="position: absolute; top: 10px; right: 15px; font-family: 'Orbitron', sans-serif; font-size: 2rem; color: {color}11; font-weight: 900; pointer-events: none;">SECURE</div>
-    <div style="font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: {color}; letter-spacing: 1px; margin-bottom: 2px; font-weight: 800;">PRIVACY CERTIFICATE</div>
-    <div style="font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; color: #88aacc; margin-bottom: 10px;">ID: NL-{abs(hash(st.session_state.nm_prompt)) % 10000:04d} | STATUS: {"CERTIFIED" if mia.get('privacy_confidence', 0) > 85 else "VERIFIED"}</div>
-    <div style="font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: #ffffff; line-height: 1.4;">
-        Neural synapse isolation audit complete. Privacy confidence is {mia.get('privacy_confidence', 0):.1f}%. Model weights are within safe operational parameters.
-    </div>
-</div>
-""", unsafe_allow_html=True)
+                import streamlit.components.v1 as components
+                priv_val = mia.get('privacy_confidence', 0)
+                cert_status = "CERTIFIED" if priv_val > 85 else "VERIFIED"
+                cert_id = abs(hash(st.session_state.nm_prompt)) % 10000
+                mia_html = (
+                    f'<div style="font-family:sans-serif;">'
+                    f'<div style="display:flex;gap:10px;margin-bottom:1rem;">'
+                    f'<div style="padding:6px 12px;background:rgba(0,20,50,0.6);border:1px solid {color}66;border-radius:6px;flex:1;font-size:0.65rem;color:{color};font-family:monospace;">MIA: {status}</div>'
+                    f'<div style="padding:6px 12px;background:rgba(0,20,50,0.6);border:1px solid #00d4ff66;border-radius:6px;flex:1;font-size:0.65rem;color:#00d4ff;font-family:monospace;">PRIVACY: {priv_val:.1f}%</div>'
+                    f'<div style="padding:6px 12px;background:rgba(0,20,50,0.6);border:1px solid #ff00aa66;border-radius:6px;flex:1;font-size:0.65rem;color:#ff00aa;font-family:monospace;">LEAKAGE: {mia.get("leakage_probability", 0):.4f}</div>'
+                    f'<div style="padding:6px 12px;background:{color}11;border:1px solid {color}aa;border-radius:6px;flex:1;font-size:0.65rem;color:{color};font-family:monospace;font-weight:900;">SCORE: {priv_val:.1f}</div>'
+                    f'</div>'
+                    f'<div style="border:2px solid {color}44;background:linear-gradient(135deg,rgba(0,20,50,0.6),rgba(0,0,0,0.8));padding:24px;border-radius:12px;position:relative;border-left:10px solid {color};overflow:hidden;">'
+                    f'<div style="position:absolute;top:10px;right:20px;font-size:3rem;color:{color}0a;font-weight:900;font-family:monospace;pointer-events:none;">SECURE</div>'
+                    f'<div style="font-size:0.8rem;color:{color};letter-spacing:2px;font-weight:800;font-family:monospace;margin-bottom:4px;">PRIVACY CERTIFICATE</div>'
+                    f'<div style="font-size:0.6rem;color:#88aacc;font-family:monospace;margin-bottom:14px;">ID: NL-{cert_id:04d} &nbsp;|&nbsp; STATUS: {cert_status}</div>'
+                    f'<div style="font-size:0.75rem;color:#ffffff;font-family:monospace;line-height:1.5;">Neural synapse isolation audit complete. Privacy confidence is {priv_val:.1f}%. Model weights are within safe operational parameters.</div>'
+                    f'</div></div>'
+                )
+                components.html(mia_html, height=220)
 
             if st.session_state.nm_mode == "forget":
                 st.success("✅ ROME surgery successful. Synaptic connection severed. Memory is no longer recoverable.")
@@ -605,76 +600,39 @@ def render():
                         privacy = data.get("privacy_confidence", 0)
                         shield_opacity = privacy / 100.0
                         
-                        st.markdown(f"""\
-<div class="glass-card" style="border-color:{color}; margin-top:1rem; position:relative; overflow:hidden;">
-    <div style="position:absolute; top:-20px; right:-20px; width:100px; height:100px; background:radial-gradient(circle, {color}44 0%, transparent 70%); border-radius:50%; filter:blur(10px); opacity:{shield_opacity};"></div>
-    
-    <div style="font-family:'Orbitron',monospace;font-size:1.2rem;color:{color};margin-bottom:12px; display:flex; align-items:center;">
-        <span style="margin-right:10px;">🛡️</span> SECURITY AUDIT COMPLETE: {status}
-    </div>
-    
-    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-bottom:15px;">
-        <div style="text-align:center; padding:10px; background:rgba(255,255,255,0.03); border-radius:4px;">
-            <div style="font-family:'Orbitron',monospace; font-size:0.6rem; color:#88aacc;">PRIVACY SHIELD</div>
-            <div style="font-family:'Share Tech Mono',monospace; font-size:1.2rem; color:{color};">{privacy}%</div>
-        </div>
-        <div style="text-align:center; padding:10px; background:rgba(255,255,255,0.03); border-radius:4px;">
-            <div style="font-family:'Orbitron',monospace; font-size:0.6rem; color:#88aacc;">LEAKAGE PROB</div>
-            <div style="font-family:'Share Tech Mono',monospace; font-size:1.2rem; color:{color};">{leakage}</div>
-        </div>
-        <div style="text-align:center; padding:10px; background:rgba(255,255,255,0.03); border-radius:4px;">
-            <div style="font-family:'Orbitron',monospace; font-size:0.6rem; color:#88aacc;">ATTACK SUCCESS</div>
-            <div style="font-family:'Share Tech Mono',monospace; font-size:1.2rem; color:{color};">{data.get("attack_success_rate", 0)}%</div>
-        </div>
-    </div>
-
-    <div style="border: 2px solid {color}44; background: linear-gradient(135deg, rgba(0,20,50,0.4) 0%, rgba(0,0,0,0.6) 100%); padding: 30px; border-radius: 12px; position: relative; border-left: 12px solid {color}; margin-top: 20px;">
-        <div style="position: absolute; top: 15px; right: 25px; font-family: 'Orbitron', sans-serif; font-size: 4rem; color: {color}11; font-weight: 900; pointer-events: none;">VERIFIED</div>
-        
-        <div style="font-family: 'Orbitron', sans-serif; font-size: 1.1rem; color: {color}; letter-spacing: 3px; margin-bottom: 8px; font-weight: 800;">
-            NEURAL PRIVACY COMPLIANCE CERTIFICATE
-        </div>
-        <div style="font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: #88aacc; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-            SERIAL NO: NL-2026-{abs(hash(st.session_state.nm_prompt)) % 1000000:06d} | SYSTEM: NL-DASHBOARD v4.2.1
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 25px;">
-            <div>
-                <div style="font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: #334466; margin-bottom: 4px; text-transform: uppercase;">Model Entity</div>
-                <div style="font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; color: #ffffff;">QWEN-1.5B (CAUSAL LLM)</div>
-            </div>
-            <div>
-                <div style="font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: #334466; margin-bottom: 4px; text-transform: uppercase;">Audit Methodology</div>
-                <div style="font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; color: #ffffff;">ROME SYNAPSE ISO (MIA)</div>
-            </div>
-            <div>
-                <div style="font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: #334466; margin-bottom: 4px; text-transform: uppercase;">Privacy Confidence</div>
-                <div style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: {color}; font-weight: 900;">{privacy:.1f}%</div>
-            </div>
-            <div style="text-align: right;">
-                <div style="font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: #334466; margin-bottom: 4px; text-transform: uppercase;">Compliance Verdict</div>
-                <div style="font-family: 'Orbitron', sans-serif; font-size: 1.1rem; color: {color}; font-weight: 900;">{"✓ CERTIFIED" if privacy > 85 else "⚠ MONITORING"}</div>
-            </div>
-        </div>
-        
-        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
-            <div style="font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: {color}; margin-bottom: 8px; font-weight: 700;">AUDITOR NARRATIVE SUMMARY</div>
-            <div style="font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: #cbd5e1; line-height: 1.6;">
-                {
-                    (data.get("gemini_audit_summary", {}).get("narrative_summary") 
-                     if isinstance(data.get("gemini_audit_summary"), dict) 
-                     else data.get("gemini_audit_summary", "")) 
-                    or "The neural weight modification has been verified. Synaptic pathways associated with the target memory have been restructured, effectively mitigating privacy leakage risks below acceptable thresholds."
-                }
-            </div>
-        </div>
-
-        <div style="font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; color: #445566; line-height: 1.4; font-style: italic;">
-            * This certificate confirms that the neural weights specified have undergone rigorous adversarial membership inference attack testing. Semantic leakage probability is currently capped at {leakage:.4f}.
-        </div>
-    </div>
-</div>
-"""), unsafe_allow_html=True)
+                        import streamlit.components.v1 as components
+                        audit_summary = (
+                            data.get("gemini_audit_summary", {}).get("narrative_summary")
+                            if isinstance(data.get("gemini_audit_summary"), dict)
+                            else data.get("gemini_audit_summary", "")
+                        ) or "The neural weight modification has been verified. Synaptic pathways associated with the target memory have been restructured."
+                        serial = abs(hash(st.session_state.nm_prompt)) % 1000000
+                        verdict = "&#10003; CERTIFIED" if privacy > 85 else "&#9888; MONITORING"
+                        cert_html = (
+                            f'<div style="font-family:monospace;background:rgba(5,5,15,0.95);padding:4px;">'
+                            f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">'
+                            f'<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:6px;"><div style="font-size:0.6rem;color:#88aacc;margin-bottom:4px;">PRIVACY SHIELD</div><div style="font-size:1.3rem;color:{color};font-weight:bold;">{privacy:.1f}%</div></div>'
+                            f'<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:6px;"><div style="font-size:0.6rem;color:#88aacc;margin-bottom:4px;">LEAKAGE PROB</div><div style="font-size:1.3rem;color:{color};font-weight:bold;">{leakage:.4f}</div></div>'
+                            f'<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:6px;"><div style="font-size:0.6rem;color:#88aacc;margin-bottom:4px;">ATTACK SUCCESS</div><div style="font-size:1.3rem;color:{color};font-weight:bold;">{data.get("attack_success_rate", 0)}%</div></div>'
+                            f'</div>'
+                            f'<div style="border:2px solid {color}44;background:linear-gradient(135deg,rgba(0,20,50,0.7),rgba(0,0,0,0.9));padding:28px;border-radius:12px;position:relative;border-left:12px solid {color};overflow:hidden;">'
+                            f'<div style="position:absolute;top:12px;right:20px;font-size:3.5rem;color:{color}0d;font-weight:900;pointer-events:none;">VERIFIED</div>'
+                            f'<div style="font-size:1rem;color:{color};letter-spacing:3px;font-weight:800;margin-bottom:6px;">NEURAL PRIVACY COMPLIANCE CERTIFICATE</div>'
+                            f'<div style="font-size:0.65rem;color:#88aacc;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.08);">SERIAL NO: NL-2026-{serial:06d} &nbsp;|&nbsp; SYSTEM: NL-DASHBOARD v4.2.1</div>'
+                            f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:20px;">'
+                            f'<div><div style="font-size:0.55rem;color:#334466;margin-bottom:3px;">MODEL ENTITY</div><div style="font-size:0.85rem;color:#fff;">QWEN-1.5B (CAUSAL LLM)</div></div>'
+                            f'<div><div style="font-size:0.55rem;color:#334466;margin-bottom:3px;">AUDIT METHODOLOGY</div><div style="font-size:0.85rem;color:#fff;">ROME SYNAPSE ISO (MIA)</div></div>'
+                            f'<div><div style="font-size:0.55rem;color:#334466;margin-bottom:3px;">PRIVACY CONFIDENCE</div><div style="font-size:1.4rem;color:{color};font-weight:900;">{privacy:.1f}%</div></div>'
+                            f'<div style="text-align:right;"><div style="font-size:0.55rem;color:#334466;margin-bottom:3px;">COMPLIANCE VERDICT</div><div style="font-size:1rem;color:{color};font-weight:900;">{verdict}</div></div>'
+                            f'</div>'
+                            f'<div style="background:rgba(0,0,0,0.3);padding:14px;border-radius:6px;border:1px solid rgba(255,255,255,0.05);margin-bottom:16px;">'
+                            f'<div style="font-size:0.6rem;color:{color};margin-bottom:6px;font-weight:700;">AUDITOR NARRATIVE SUMMARY</div>'
+                            f'<div style="font-size:0.78rem;color:#cbd5e1;line-height:1.6;">{audit_summary}</div>'
+                            f'</div>'
+                            f'<div style="font-size:0.58rem;color:#445566;line-height:1.4;font-style:italic;">* This certificate confirms that the neural weights specified have undergone rigorous adversarial MIA testing. Semantic leakage probability is capped at {leakage:.4f}.</div>'
+                            f'</div></div>'
+                        )
+                        components.html(cert_html, height=600, scrolling=False)
                         
                         with st.expander("View 20 Raw Attack Vectors & Semantic Scores"):
                             st.json(data.get("attack_details", []))
