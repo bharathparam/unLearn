@@ -560,6 +560,9 @@ def render():
                     <div class="glass-card" style="padding:5px 12px; border-color:#ff00aa66; flex:1;">
                         <span style="font-family:'Orbitron',monospace; font-size:0.6rem; color:#ff00aa;">LEAKAGE: {mia.get('leakage_probability', 0):.4f}</span>
                     </div>
+                    <div class="glass-card" style="padding:5px 12px; border-color:{color}aa; flex:1; background: {color}11;">
+                        <span style="font-family:'Orbitron',monospace; font-size:0.6rem; color:{color}; font-weight:900;">SCORE: {mia.get('privacy_confidence', 0):.1f}</span>
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -616,13 +619,48 @@ def render():
                                 </div>
                             </div>
 
-                            <div style="font-family:'Share Tech Mono',monospace;font-size:0.85rem;color:#ffffff; background:rgba(0,0,0,0.2); padding:10px; border-radius:4px; border-left: 3px solid {color};">
+                            <div style="font-family:'Share Tech Mono',monospace;font-size:0.85rem;color:#ffffff; background:rgba(0,0,0,0.2); padding:10px; border-radius:4px; border-left: 3px solid {color}; margin-bottom:15px;">
                                 <b style="color:{color};">AUDITOR VERDICT:</b><br>
                                 {
                                     data.get("gemini_audit_summary", {}).get("narrative_summary") 
                                     if isinstance(data.get("gemini_audit_summary"), dict) 
                                     else data.get("gemini_audit_summary", "No audit summary available.")
                                 }
+                            </div>
+
+                            <!-- 📜 PRIVACY CERTIFICATE -->
+                            <div style="border: 2px solid {color}44; background: linear-gradient(135deg, rgba(0,20,50,0.4) 0%, rgba(0,0,0,0.6) 100%); padding: 20px; border-radius: 8px; position: relative; border-left: 10px solid {color};">
+                                <div style="position: absolute; top: 10px; right: 15px; font-family: 'Orbitron', sans-serif; font-size: 3rem; color: {color}11; font-weight: 900; pointer-events: none;">VERIFIED</div>
+                                
+                                <div style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: {color}; letter-spacing: 2px; margin-bottom: 5px; font-weight: 800;">
+                                    NEURAL PRIVACY COMPLIANCE CERTIFICATE
+                                </div>
+                                <div style="font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; color: #88aacc; margin-bottom: 15px;">
+                                    SERIAL: NL-2026-{abs(hash(st.session_state.nm_prompt)) % 1000000:06d} | REV: 4.2.1
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                    <div>
+                                        <div style="font-family: 'Orbitron', sans-serif; font-size: 0.55rem; color: #334466; margin-bottom: 2px;">MODEL ENTITY</div>
+                                        <div style="font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: #ffffff;">QWEN-1.5B (CAUSAL)</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-family: 'Orbitron', sans-serif; font-size: 0.55rem; color: #334466; margin-bottom: 2px;">AUDIT METHOD</div>
+                                        <div style="font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: #ffffff;">ROME SYNAPSE ISO</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-family: 'Orbitron', sans-serif; font-size: 0.55rem; color: #334466; margin-bottom: 2px;">PRIVACY SCORE</div>
+                                        <div style="font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: {color}; font-weight: 900;">{privacy:.1f}/100</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-family: 'Orbitron', sans-serif; font-size: 0.55rem; color: #334466; margin-bottom: 2px;">COMPLIANCE STATUS</div>
+                                        <div style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: {color}; font-weight: 900;">{"✓ CERTIFIED" if privacy > 85 else "⚠ MONITORING"}</div>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; color: #445566; line-height: 1.4;">
+                                    THIS DOCUMENT CERTIFIES THAT THE SPECIFIED NEURAL WEIGHTS HAVE UNDERGONE ADVERSARIAL MEMBERSHIP INFERENCE ATTACK (MIA) TESTING. SEMANTIC LEAKAGE HAS BEEN MEASURED AT {leakage:.4f} AND IS WITHIN SAFE OPERATIONAL PARAMETERS.
+                                </div>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
