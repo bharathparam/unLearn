@@ -9,16 +9,6 @@ uvicorn[standard]==0.34.0
 pydantic==2.10.4
 pydantic-settings==2.7.1
 
-# ML / NLP (available for future extension)
-transformers==4.47.1
-torch==2.5.1
-sentence-transformers==3.3.1
-
-# Numerical & Data
-numpy==2.2.1
-pandas==2.2.3
-scikit-learn==1.6.1
-
 # Utilities
 python-multipart==0.0.20
 
